@@ -1,0 +1,54 @@
+name: Run DC Passwd Manager Bot
+
+on:
+  # Start manually from the Actions tab → "Run workflow"
+  workflow_dispatch:
+  # Also re-run automatically every 5 hours 50 minutes so the bot stays online
+  # (GitHub Actions jobs time out after 6 hours)
+  schedule:
+    - cron: '50 */6 * * *'
+
+jobs:
+  run-bot:
+    name: Start Discord bot + dashboard
+    runs-on: ubuntu-latest
+    # Keep the job alive for up to 6 hours (GitHub's maximum)
+    timeout-minutes: 350
+
+    env:
+      DISCORD_TOKEN:      ${{ secrets.DISCORD_TOKEN }}
+      DISCORD_GUILD_ID:   ${{ secrets.DISCORD_GUILD_ID }}
+      ENCRYPTION_KEY:     ${{ secrets.ENCRYPTION_KEY }}
+      DASHBOARD_USERNAME: ${{ secrets.DASHBOARD_USERNAME }}
+      DASHBOARD_PASSWORD: ${{ secrets.DASHBOARD_PASSWORD }}
+      FLASK_SECRET_KEY:   ${{ secrets.FLASK_SECRET_KEY }}
+      DASHBOARD_PORT:     5000
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Validate required secrets
+        run: |
+          missing=()
+          [ -z "$DISCORD_TOKEN" ]      && missing+=("DISCORD_TOKEN")
+          [ -z "$ENCRYPTION_KEY" ]     && missing+=("ENCRYPTION_KEY")
+          [ -z "$FLASK_SECRET_KEY" ]   && missing+=("FLASK_SECRET_KEY")
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "❌ Missing repository secrets: ${missing[*]}"
+            echo "   Go to Settings → Secrets and variables → Actions → New repository secret"
+            exit 1
+          fi
+          echo "✅ All required secrets are present."
+
+      - name: Run bot
+        run: python main.py

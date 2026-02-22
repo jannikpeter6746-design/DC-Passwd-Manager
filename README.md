@@ -127,10 +127,57 @@ Logged in as DC Passwd Manager#1234 (ID: 123456789012345678)
 
 ---
 
+## Running on GitHub Actions
+
+You can run the bot directly from your GitHub repository without any server.  
+GitHub Actions provides a free Ubuntu runner that keeps the bot online for up to **6 hours per run** — the included workflow re-triggers itself automatically every 5 h 50 min to stay online around the clock.
+
+> ⚠️ The **web dashboard** is not publicly reachable when running on GitHub Actions (the runner has no public IP). Use the **Discord slash commands** as normal. If you need the dashboard, run the bot locally or on a VPS.
+
+### Step A — Add your secrets to the repository
+
+Your credentials must **never** be stored in code. Instead, save them as GitHub repository secrets:
+
+1. On GitHub, go to your repository → **Settings** → **Secrets and variables** → **Actions**.
+2. Click **New repository secret** for each variable below:
+
+| Secret name | Value |
+|---|---|
+| `DISCORD_TOKEN` | Bot token (Step 1 of Quick Start) |
+| `DISCORD_GUILD_ID` | Your server ID (Step 2 of Quick Start) |
+| `ENCRYPTION_KEY` | Fernet key — generate with the command in Step 4 |
+| `DASHBOARD_USERNAME` | Dashboard username of your choice |
+| `DASHBOARD_PASSWORD` | Dashboard password of your choice |
+| `FLASK_SECRET_KEY` | Any long random string |
+
+### Step B — Start the bot
+
+1. Click the **Actions** tab in your repository.
+2. In the left sidebar click **Run DC Passwd Manager Bot**.
+3. Click **Run workflow** → **Run workflow** (green button).
+
+The workflow will:
+- Install Python 3.11 and all dependencies
+- Validate that all required secrets are present
+- Start the Discord bot (and the web dashboard in the background)
+
+**You will see the bot come online in your Discord server within ~30 seconds.**
+
+### How it stays online
+
+The workflow is also scheduled to start automatically every 5 hours 50 minutes (`cron: '50 */6 * * *'`), so the bot restarts before GitHub's 6-hour job timeout cuts it off.
+
+> **Free-tier note:** GitHub Actions provides 2 000 free minutes per month for public repositories (unlimited) and private repositories. Each run uses roughly 350 minutes. Check *Settings → Billing* if you are on a private repository.
+
+---
+
 ## Project Structure
 
 ```
 DC-Passwd-Manager/
+├── .github/
+│   └── workflows/
+│       └── run-bot.yml  # GitHub Actions workflow (start via Actions tab)
 ├── main.py          # Entry point – starts bot + dashboard
 ├── bot.py           # Discord bot & slash commands
 ├── dashboard.py     # Flask web dashboard
