@@ -16,7 +16,7 @@ from flask import (
     jsonify,
 )
 from models import db, Category, Password
-from encryption import encrypt_password, decrypt_password
+from encryption import encrypt_password, decrypt_password, generate_password
 
 
 # ---------------------------------------------------------------------------
@@ -201,5 +201,21 @@ def create_app(db_path: str = None) -> Flask:
         except Exception:
             return jsonify({"error": "Decryption failed"}), 500
         return jsonify({"password": plain})
+
+    @app.route("/api/generate-password", methods=["GET"])
+    @login_required
+    def api_generate_password():
+        """Return a freshly generated random password as JSON."""
+        try:
+            length = int(request.args.get("length", 16))
+            uppercase = request.args.get("uppercase", "true").lower() != "false"
+            numbers = request.args.get("numbers", "true").lower() != "false"
+            symbols = request.args.get("symbols", "true").lower() != "false"
+            password = generate_password(
+                length=length, uppercase=uppercase, numbers=numbers, symbols=symbols
+            )
+        except ValueError as exc:
+            return jsonify({"error": str(exc)}), 400
+        return jsonify({"password": password})
 
     return app
