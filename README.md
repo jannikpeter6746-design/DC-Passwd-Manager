@@ -20,7 +20,70 @@ Each entry can be restricted to one or more Discord **roles**.
 
 ---
 
-## Quick Start
+## ▶ Running via GitHub Actions
+
+The easiest way to start the bot **directly from this GitHub repository** – no local machine required.
+
+> ⚠️ **Note:** GitHub Actions jobs run for a maximum of **6 hours** on the free tier.  
+> For a permanent, always-on bot see [Deploying permanently](#-deploying-permanently) below.
+
+### Step 1 – Add repository secrets
+
+Go to your repository on GitHub:  
+**Settings → Secrets and variables → Actions → New repository secret**
+
+Add each of the following secrets:
+
+| Secret name | Value |
+|---|---|
+| `DISCORD_TOKEN` | Bot token from the [Discord Developer Portal](https://discord.com/developers/applications) |
+| `DISCORD_GUILD_ID` | Your server/guild ID (Developer Mode → right-click server → Copy ID) |
+| `ENCRYPTION_KEY` | Fernet key – see how to generate one below |
+| `DASHBOARD_USERNAME` | Username for the web dashboard login |
+| `DASHBOARD_PASSWORD` | Password for the web dashboard login |
+| `FLASK_SECRET_KEY` | A long random string (e.g. `openssl rand -hex 32`) |
+
+**Generate an encryption key** (run this once locally or in any Python shell):
+
+```bash
+python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+```
+
+Copy the output and save it as the `ENCRYPTION_KEY` secret.
+
+### Step 2 – Trigger the workflow
+
+1. Open the **Actions** tab in your repository.
+2. Select **🤖 Run Discord Bot** in the left sidebar.
+3. Click **Run workflow** → **Run workflow**.
+
+The bot will start within seconds and stay online for up to 6 hours.  
+You can check the live log output directly in the Actions tab.
+
+### Step 3 – Discord bot permissions
+
+In the [Discord Developer Portal](https://discord.com/developers/applications):
+
+- Enable **Server Members Intent** under *Bot → Privileged Gateway Intents*
+- Invite the bot with OAuth2 scopes: `bot`, `applications.commands`
+- Required bot permissions: **Manage Channels**, **Manage Guild**
+
+---
+
+## 🚀 Deploying permanently
+
+For an always-on bot (beyond the 6-hour Actions limit) deploy to a cheap cloud service:
+
+| Platform | How |
+|---|---|
+| **Railway** | Connect the repo, set the same environment variables as secrets, set start command `python main.py` |
+| **Fly.io** | `fly launch`, add secrets with `fly secrets set DISCORD_TOKEN=…` |
+| **Render** | New → Background Worker → connect repo → set env vars → start command `python main.py` |
+| **VPS (Ubuntu)** | `git clone`, install deps, create a `.env` file, run with `screen` or `systemd` |
+
+---
+
+## 💻 Local Quick Start
 
 ### 1. Install dependencies
 
@@ -34,40 +97,16 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Edit `.env` and fill in:
+Edit `.env` and fill in the same variables listed in the secrets table above.
 
-| Variable | Description |
-|---|---|
-| `DISCORD_TOKEN` | Bot token from the [Discord Developer Portal](https://discord.com/developers/applications) |
-| `DISCORD_GUILD_ID` | Your server/guild ID (Developer Mode → right-click server → Copy ID) |
-| `ENCRYPTION_KEY` | Fernet key – generate with the command below |
-| `DASHBOARD_USERNAME` | Dashboard login username |
-| `DASHBOARD_PASSWORD` | Dashboard login password |
-| `FLASK_SECRET_KEY` | Random secret string for Flask sessions |
-| `DASHBOARD_PORT` | Port for the web dashboard (default `5000`) |
-
-**Generate an encryption key:**
-
-```bash
-python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-```
-
-### 3. Discord bot permissions
-
-In the Developer Portal enable the following **Privileged Gateway Intents**:
-- `SERVER MEMBERS INTENT` (to resolve role names)
-
-Invite the bot with these **OAuth2 scopes**: `bot`, `applications.commands`  
-Required bot permissions: `Manage Channels`, `Manage Guild`
-
-### 4. Run
+### 3. Run
 
 ```bash
 python main.py
 ```
 
-- The Discord bot will connect and register slash commands in your guild.
-- The web dashboard will be available at `http://localhost:5000` (or the configured port).
+- The Discord bot connects and registers slash commands in your guild.
+- The web dashboard is available at `http://localhost:5000`.
 
 ---
 
@@ -75,14 +114,17 @@ python main.py
 
 ```
 DC-Passwd-Manager/
-├── main.py          # Entry point – starts bot + dashboard
-├── bot.py           # Discord bot & slash commands
-├── dashboard.py     # Flask web dashboard
-├── models.py        # SQLAlchemy database models
-├── encryption.py    # Fernet encryption helpers
+├── .github/
+│   └── workflows/
+│       └── run-bot.yml  # GitHub Actions – manual trigger
+├── main.py              # Entry point – starts bot + dashboard
+├── bot.py               # Discord bot & slash commands
+├── dashboard.py         # Flask web dashboard
+├── models.py            # SQLAlchemy database models
+├── encryption.py        # Fernet encryption helpers
 ├── requirements.txt
 ├── .env.example
-├── templates/       # Jinja2 HTML templates
+├── templates/           # Jinja2 HTML templates
 │   ├── base.html
 │   ├── login.html
 │   ├── index.html
@@ -90,12 +132,13 @@ DC-Passwd-Manager/
 │   ├── passwords.html
 │   └── edit_password.html
 └── static/
-    └── style.css    # Dashboard styles
+    └── style.css        # Dashboard styles
 ```
 
 ## Security Notes
 
 - Passwords are encrypted with **Fernet** (AES-128-CBC + HMAC-SHA256) before being stored.
-- The encryption key lives in `.env` – keep this file secret and **never commit it**.
+- The encryption key lives in `.env` / GitHub Secrets – **never commit it to the repository**.
 - Bot commands that show or delete passwords are sent as **ephemeral** messages (only visible to the requester).
 - The web dashboard is protected by username/password authentication.
+- Dashboard credentials are compared using constant-time comparison to prevent timing attacks.
