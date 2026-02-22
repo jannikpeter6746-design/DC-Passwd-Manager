@@ -1,0 +1,49 @@
+# DC-Passwd-Manager – Discord bot workflow
+#
+# How to start the bot:
+#   1. Go to Actions → "Run Discord Bot" → Run workflow
+#   2. The bot will connect to Discord and stay online until the job ends
+#      (GitHub Actions has a 6-hour limit per job).
+#   3. To keep the bot running longer, enable the scheduled trigger below.
+#
+# Required GitHub Secrets (Settings → Secrets and variables → Actions):
+#   DISCORD_TOKEN  – Your Discord bot token (from Discord Developer Portal)
+#   BOT_SECRET_KEY – Any long random string used to encrypt stored passwords
+
+name: Run Discord Bot
+
+on:
+  # Manual start via the Actions tab
+  workflow_dispatch:
+
+  # Optional: restart the bot automatically every 5 hours 50 minutes so it
+  # stays online continuously.  Uncomment the lines below to enable this.
+  # schedule:
+  #   - cron: "50 */5 * * *"
+
+jobs:
+  bot:
+    name: Start bot
+    runs-on: ubuntu-latest
+    timeout-minutes: 350   # 10-minute safety margin below GitHub's 6-hour (360-minute) job limit
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run bot
+        env:
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+          BOT_SECRET_KEY: ${{ secrets.BOT_SECRET_KEY }}
+        run: python bot.py
