@@ -1,1 +1,4 @@
-passwd_manager.db\n*.pyc\n__pycache__/\n.env
+passwd_manager.db
+*.pyc
+__pycache__/
+.env
