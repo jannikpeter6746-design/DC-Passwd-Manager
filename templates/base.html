@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}DC Passwd Manager{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  {% if session.get('logged_in') %}
+  <nav class="navbar">
+    <a class="brand" href="{{ url_for('index') }}">🔐 DC&nbsp;<span class="brand-accent">Passwd</span>&nbsp;Manager</a>
+    <div class="nav-links">
+      <a href="{{ url_for('index') }}"{% if request.endpoint == 'index' %} class="active"{% endif %}>Dashboard</a>
+      <a href="{{ url_for('categories') }}"{% if request.endpoint in ('categories', 'passwords', 'edit_password') %} class="active"{% endif %}>Categories</a>
+      <a href="{{ url_for('logout') }}">Logout</a>
+    </div>
+  </nav>
+  {% endif %}
+
+  <main class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <p>DC Passwd Manager &mdash; Secure your credentials on Discord</p>
+  </footer>
+</body>
+</html>

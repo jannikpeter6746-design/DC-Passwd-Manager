@@ -1,0 +1,4 @@
+passwd_manager.db
+*.pyc
+__pycache__/
+.env

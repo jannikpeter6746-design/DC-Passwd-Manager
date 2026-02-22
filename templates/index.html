@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – DC Passwd Manager{% endblock %}
+
+{% block content %}
+<h1>📊 Dashboard</h1>
+<p>Welcome to the DC Passwd Manager dashboard. Use the navigation above to manage your password categories.</p>
+
+<div class="stats-grid">
+  {% set ns = namespace(total=0) %}
+  {% for cat in categories %}{% set ns.total = ns.total + (cat.passwords | length) %}{% endfor %}
+  <div class="stat-card">
+    <span class="stat-number">{{ categories | length }}</span>
+    <span class="stat-label">Categories</span>
+  </div>
+  <div class="stat-card">
+    <span class="stat-number">{{ ns.total }}</span>
+    <span class="stat-label">Password Entries</span>
+  </div>
+</div>
+
+<h2>Categories Overview</h2>
+{% if categories %}
+<table class="table">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Name</th>
+      <th>Guild ID</th>
+      <th>Entries</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for cat in categories %}
+    <tr>
+      <td>{{ cat.id }}</td>
+      <td>{{ cat.name }}</td>
+      <td><code>{{ cat.guild_id }}</code></td>
+      <td>{{ cat.passwords | length }}</td>
+      <td>
+        <a href="{{ url_for('passwords', cat_id=cat.id) }}" class="btn btn-sm btn-primary">View Passwords</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="empty-state">No categories yet. Use <code>/addcategory</code> in Discord or go to <a href="{{ url_for('categories') }}">Categories</a> to add one.</p>
+{% endif %}
+{% endblock %}

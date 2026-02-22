@@ -1,0 +1,55 @@
+name: 🤖 Run Discord Bot
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Trigger: manually via the "Actions" tab → "Run workflow" button.
+#
+# ⚠️  GitHub Actions jobs run for a maximum of 6 hours (free tier).
+#     For a permanent, always-on bot consider deploying to a VPS, Railway,
+#     Fly.io, or similar.  See README.md → "Deploying permanently" for options.
+#
+# Required repository secrets (Settings → Secrets and variables → Actions):
+#   DISCORD_TOKEN       – bot token from the Discord Developer Portal
+#   DISCORD_GUILD_ID    – your server/guild ID
+#   ENCRYPTION_KEY      – Fernet key (see README for how to generate one)
+#   DASHBOARD_USERNAME  – web dashboard login username
+#   DASHBOARD_PASSWORD  – web dashboard login password
+#   FLASK_SECRET_KEY    – random string for Flask sessions
+# ──────────────────────────────────────────────────────────────────────────────
+
+on:
+  workflow_dispatch:
+    inputs:
+      dashboard_port:
+        description: "Web dashboard port (default: 5000)"
+        required: false
+        default: "5000"
+
+jobs:
+  run-bot:
+    name: Start Discord bot
+    runs-on: ubuntu-latest
+    timeout-minutes: 360   # 6-hour hard limit
+
+    steps:
+      - name: ⬇️ Check out repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: 📦 Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: 🤖 Start bot (+ dashboard)
+        env:
+          DISCORD_TOKEN:      ${{ secrets.DISCORD_TOKEN }}
+          DISCORD_GUILD_ID:   ${{ secrets.DISCORD_GUILD_ID }}
+          ENCRYPTION_KEY:     ${{ secrets.ENCRYPTION_KEY }}
+          DASHBOARD_USERNAME: ${{ secrets.DASHBOARD_USERNAME }}
+          DASHBOARD_PASSWORD: ${{ secrets.DASHBOARD_PASSWORD }}
+          FLASK_SECRET_KEY:   ${{ secrets.FLASK_SECRET_KEY }}
+          DASHBOARD_PORT:     ${{ inputs.dashboard_port }}
+        run: python main.py
