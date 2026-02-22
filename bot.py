@@ -28,7 +28,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from models import db, Category, Password
-from encryption import encrypt_password, decrypt_password
+from encryption import encrypt_password, decrypt_password, generate_password
 
 # ---------------------------------------------------------------------------
 # Bot setup
@@ -314,4 +314,48 @@ async def deletecategory(interaction: discord.Interaction, name: str):
 
     await interaction.followup.send(
         f"✅ Category **{name}** and all its passwords have been deleted.", ephemeral=True
+    )
+
+
+# ---------------------------------------------------------------------------
+# /generatepassword
+# ---------------------------------------------------------------------------
+
+
+@bot.tree.command(name="generatepassword", description="Generate a secure random password")
+@app_commands.describe(
+    length="Length of the password (4-128, default 16)",
+    uppercase="Include uppercase letters (default True)",
+    numbers="Include digits (default True)",
+    symbols="Include punctuation symbols (default True)",
+)
+async def generatepassword(
+    interaction: discord.Interaction,
+    length: int = 16,
+    uppercase: bool = True,
+    numbers: bool = True,
+    symbols: bool = True,
+):
+    await interaction.response.defer(ephemeral=True)
+    try:
+        password = generate_password(
+            length=length, uppercase=uppercase, numbers=numbers, symbols=symbols
+        )
+    except ValueError as exc:
+        await interaction.followup.send(f"❌ {exc}", ephemeral=True)
+        return
+
+    char_classes = ["lowercase"]
+    if uppercase:
+        char_classes.append("uppercase")
+    if numbers:
+        char_classes.append("numbers")
+    if symbols:
+        char_classes.append("symbols")
+
+    await interaction.followup.send(
+        f"🔑 Generated password (`{', '.join(char_classes)}`, length {length}):\n"
+        f"```\n{password}\n```\n"
+        "⚠️ This message is ephemeral — only you can see it. Copy it now!",
+        ephemeral=True,
     )

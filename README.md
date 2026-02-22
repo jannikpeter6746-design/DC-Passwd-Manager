@@ -135,6 +135,25 @@ DC-Passwd-Manager/
     └── style.css        # Dashboard styles
 ```
 
+## Screenshots
+
+### Login
+![Login page](https://github.com/user-attachments/assets/726834da-c595-4107-97f7-8b54ed1c8071)
+
+### Dashboard
+![Dashboard](https://github.com/user-attachments/assets/4595beef-3e14-4a9e-8788-4cc63ad5856a)
+
+### Categories
+![Categories](https://github.com/user-attachments/assets/cab56cd6-3d97-499d-9daf-4f6e1bf61efb)
+
+### Passwords
+![Passwords](https://github.com/user-attachments/assets/9892d7e4-cfcb-4fd0-ad4d-7f6d69fe1b91)
+
+### Edit Password
+![Edit Password](https://github.com/user-attachments/assets/6560933e-e721-4793-bd28-ac8be984469d)
+
+---
+
 ## Security Notes
 
 - Passwords are encrypted with **Fernet** (AES-128-CBC + HMAC-SHA256) before being stored.
